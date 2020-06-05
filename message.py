@@ -4,19 +4,25 @@ from computer import Computer
 class Message():
     """The Message class."""
 
-    def __init__(self, src, dst, messageType):
+    def __init__(self, src, dst, messageType, value):
         """Initialises the Message class."""
-        if isinstance(src, Computer):
-            self.src = src
-        if isinstance(dst, Computer):
-            self.dst = dst
-        if isinstance(messageType, str):
-            self.messageType = messageType.upper()   # Cleans the string
+        if not isinstance(src, (Computer, type(None))):
+            raise TypeError("The src must be of type Computer or None if from external agent.")
+        if not isinstance(dst, Computer):
+            raise TypeError("The dst must be of type Computer.")
+        if not isinstance(value, int):
+            raise TypeError("The value must be of type integer.")
+
+        self.src = src
+        self.dst = dst
+        self.messageType = Message.checkMessageType(messageType)
+        self.value = value
 
     def setSource(self, source):
         """Sets the source of the message."""
-        if isinstance(source, Computer):
-            self.src = source
+        if not isinstance(source, (Computer, type(None))):
+            raise TypeError("Src must be of type Computer or None if from external agent.")
+        self.src = source
 
     def getSource(self):
         """Gets the source of the message."""
@@ -24,8 +30,9 @@ class Message():
 
     def setDestination(self, destination):
         """Sets the destination of the message."""
-        if isinstance(destination, Computer):
-            self.destination = destination
+        if not isinstance(destination, Computer):
+            raise TypeError("Dst must be of type Computer.")
+        self.destination = destination
 
     def getDestination(self):
         """Gets the destination of the message."""
@@ -33,14 +40,23 @@ class Message():
 
     def setMessageType(self, messageType):
         """Sets the type of the message: {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED}."""
-        self.messageType = messageType.upper()
+        self.messageType = Message.checkMessageType(messageType)
 
     def getMessageType(self):
         """Gets the type of the message: {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED}."""
         return self.messageType
 
+    @staticmethod
+    def checkMessageType(messageType):
+        """Checks the given messageType. Raises or returns a valid string.
 
-if __name__ == "__main__":
-    m1 = Message(src="A1", dst="A2", messageType="Propose")
-    m2 = Message(src="P1", dst="P3", messageType="PromISE")
-    print(m1.getMessageType(), m2.getMessageType())
+        Only accepts the following strings:
+        {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED}
+        """
+        if not isinstance(messageType, str):
+            raise TypeError("MessageType must be string.")
+
+        if messageType.upper() in ("PROPOSE", "PREPARE", "PROMISE", "ACCEPT", "ACCEPTED", "REJECTED"):
+            return messageType.upper()  # Cleans the string
+        else:
+            raise ValueError("Not a valid messageType.")

@@ -1,13 +1,15 @@
-from message import Message
-
-
 class Computer:
     """The Computer class."""
 
-    def __init__(self, cType):
+    def __init__(self, ID, cType, network):
         """Initialises the Computer class."""
-        if cType.upper() in ("ACCEPTOR", "PROPOSER"):
-            self.cType = cType.upper()  # Cleans the string
+        if not cType.upper() in ("ACCEPTOR", "PROPOSER"):
+            raise ValueError("Not a valid cType.")
+
+        self.ID = ID
+        self.cType = cType.upper()  # Cleans the string
+        self.network = network
+
         self.failed = False
 
     def setComputerType(self, cType):
@@ -27,17 +29,35 @@ class Computer:
         """Get the failed status of this computer: {True, False}."""
         return self.failed
 
-    def deliverMessage(self, destinationComputer, message, network):
+    def deliverMessage(self, message):
         """Delivers a message to a computer, via the Network-queue."""
-        m = Message(src=self, dst=destinationComputer, messageType=message.messageType)
-        network.queueMessage(m)
+        
+        # PROPOSER
+        if message.getMessageType() == "PROPOSE":
+            message.setSource(self)
+            message.setMessageType("PREPARE")
 
+            for i in self.network.acceptors:
+                message.setDestination(i)
+                self.network.queueMessage(message)
+        
+        # ACCEPTOR
+        elif message.getMessageType() == "PREPARE":
+            pass
+            # Check of message.value groter is dan de vorig bekende value 
+            # Als dat zo is, stuur promise naar de proposer
 
-if __name__ == "__main__":
-    c1 = Computer(cType="ACCEPTOR")
-    c2 = Computer(cType="ProPOser")
+        # PROPOSER
+        elif message.getMessageType() == "PROMISE":
+            message.setDestination(message.getSource())
+            message.setSource(self)
+            message.setMessageType("ACCEPT")
 
-    print(c1.getType(), c2.getType())
+            self.network.queueMessage(message)
 
-    c1.setFailing(True)
-    print(c1.getFailing(), c2.getFailing())
+        # ACCEPTOR    
+        elif message.getMessageType() == "ACCEPT":
+            pass
+            # Geaccpeteerd (ACCEPTED) als message.value hoogste is
+            # Weigeren (REJECTED) als dat niet zo is 
+            

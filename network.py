@@ -1,18 +1,30 @@
 from message import Message
-from computer import Computer
 
 
 class Network():
     """The Network class."""
 
-    def __init__(self, messages):
+    def __init__(self):
         """Initialises the network."""
-        self.messages = messages
+        self.messages = []  # The queue of messages
+
+    def setProposers(self, proposers):
+        """Sets list with all the proposers."""
+        self.proposers = proposers
+
+    def setAcceptors(self, acceptors):
+        """Sets list with all the acceptors"""
+        self.acceptors = acceptors
+
+    def getProposer(self, ID):
+        """Sets list with all the proposers."""
+        return self.proposers[ID-1]
 
     def queueMessage(self, message):
         """Adds a message to the queue."""
-        if isinstance(message, Message):
-            self.message.append(message)
+        if not isinstance(message, Message):
+            raise TypeError("The message must be of type Message")
+        self.messages.append(message)
 
     def extractMessage(self):
         """
@@ -28,14 +40,3 @@ class Network():
     def numberOfMessages(self):
         """Gets the number of messages of the network."""
         return len(self.messages)
-
-
-if __name__ == "__main__":
-    c1 = Computer(cType="ACCEPTOR")
-    c2 = Computer(cType="ProPOser")
-
-    m1 = Message(src=c1, dst=c2, messageType="Propose")
-    n = Network(messages=[m1])
-
-    print(n.extractMessage())  # Extracts the first and only message
-    print(n.extractMessage())  # No messages left, returns None
