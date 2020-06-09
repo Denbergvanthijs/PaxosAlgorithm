@@ -21,14 +21,20 @@ class Simulation():
             if (not self.network.numberOfMessages()) and (not self.numberOfEvents()):
                 return None  # Simulation is stopped
 
-            event = self.events.get(tick)
-            # print(event)
+            event = self.events.pop(tick) if tick in self.events else None  # Removes current event, if event
             if event is not None:
                 (F, R, pC, pV) = event
+
                 for computer in F:
-                    computer.setFailing(True)
+                    computer.failed = True
                 for computer in R:
-                    computer.setFailing(False)
+                    computer.failed = False
+
+                if F:
+                    print(f"{tickVal}: ** {' '.join([c.getName() for c in F])} kapot **")
+                if R:
+                    print(f"{tickVal}: ** {' '.join([c.getName() for c in R])} gerepareerd **")
+
                 if (pC is not None) and (pV is not None):
                     message = Message(None, pC, "PROPOSE", pV)
                     pC.deliverMessage(message)
@@ -44,6 +50,12 @@ class Simulation():
                 if message is not None:
                     print(f"{tickVal}: {message}")
                     message.dst.deliverMessage(message)
+                else:
+                    print(f"{tickVal}:")
+
+        print()
+        for proposer in self.network.proposers:
+            print(f"{proposer.getName()} heeft wel consensus (voorgesteld: {proposer.proposed}, geaccepteerd: {proposer.value})")
 
     def numberOfEvents(self):
         """Gets the number of events for this simulation."""
@@ -52,15 +64,21 @@ class Simulation():
 
 if __name__ == "__main__":
     network = Network()
-    network.setProposers([Computer(i, "Proposer", network) for i in range(1, 1 + 1)])
-    network.setAcceptors([Computer(i, "Acceptor", network) for i in range(1, 3 + 1)])
+    network.proposers = [Computer(i, "Proposer", network) for i in range(1, 2 + 1)]
+    network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, 3 + 1)]
 
-    E = {0: [[], [], network.proposers[0], 42]}
+    E = {0: [[], [], network.proposers[0], 42],
+         8: [[network.proposers[0]], [], None, None],
+         11: [[], [], network.proposers[1], 37],
+         26: [[], [network.proposers[0]], None, None]
+         }
 
-    s = Simulation(nProposers=1, nAcceptors=3,
-                   tMax=15, events=E, network=network)
-    s.run()
-
-    # 1 3 15
+    # 2 3 50
     # 0 PROPOSE 1 42
+    # 8 FAIL PROPOSER 1
+    # 11 PROPOSE 2 37
+    # 26 RECOVER PROPOSER 1
     # 0 END
+
+    s = Simulation(nProposers=2, nAcceptors=3, tMax=50, events=E, network=network)
+    s.run()

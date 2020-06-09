@@ -15,34 +15,26 @@ class Computer:
         self.cType = cType.upper()  # Cleans the string
         self.network = network
 
+        self.proposed = None  # Initial proposed value from external.
         self.failed = False
-        self.value = None
-        self.prior = 0
-        self.promises = 0
-        self.accepted = False
+        self.value = None  # Current accepted value
+        self.prior = 0  # Prior number of transaction
 
-    def setComputerType(self, cType):
-        """Sets the type of this computer: {Proposer, Acceptor}."""
-        self.cType = cType
+        self.promises = 0  # Number of promises from Acceptors to Proposers
+        self.accepted = False  # If the current transaction is accepted
 
-    def getComputerType(self):
-        """Gets the type of this computer: {Proposer, Acceptor}."""
-        return self.cType
+        self.rejects = 0  # Number of rejected from Accepters to Proposers
+        self.rejected = False  # If the current transaction is
 
-    def setFailing(self, status):
-        """Sets the failed status of the computer."""
-        if isinstance(status, bool):
-            self.failed = status
-
-    def getFailing(self):
-        """Get the failed status of this computer: {True, False}."""
-        return self.failed
+    def getName(self):
+        """Gets the name of the current computer."""
+        return f"{self.cType[0]}{self.ID}"
 
     def deliverMessage(self, message):
         """Delivers a message to a computer, via the Network-queue."""
         # Extern naar PROPOSER, dit handelt een proposer af
-        if message.getMessageType() == "PROPOSE":
-            self.value = message.value
+        if message.messageType == "PROPOSE":
+            self.proposed = message.value
 
             for acceptor in self.network.acceptors:
                 # PREPARE message can not contain the value:
@@ -53,34 +45,49 @@ class Computer:
             Computer.n += 1
 
         # Proposer naar ACCEPTOR, dit handelt een acceptor af
-        elif message.getMessageType() == "PREPARE":
+        elif message.messageType == "PREPARE":
             if message.n > self.prior:
-                returnMessage = Message(self, message.src, "PROMISE", None, message.n)
+                returnMessage = Message(self, message.src, "PROMISE", self.value, self.prior)
                 self.network.queueMessage(returnMessage)
 
         # Acceptor naar PROPOSER, dit handelt een proposer af
-        elif message.getMessageType() == "PROMISE":
+        elif message.messageType == "PROMISE":
             self.promises += 1
 
             # 50% accepted is not enough
             if self.promises > (len(self.network.acceptors) // 2):
+                if message.value is not None:
+                    self.value = message.value if message.value > self.value else self.value
+
                 if not self.accepted:
                     for acceptor in self.network.acceptors:
-                        returnMessage = Message(self, acceptor, "ACCEPT", self.value, message.n)
+                        returnMessage = Message(self, acceptor, "ACCEPT", self.proposed, message.n)
                         self.network.queueMessage(returnMessage)
 
                     self.promises = 0
                     self.accepted = True
 
         # Proposer naar ACCEPTOR, dit handelt een acceptor af
-        elif message.getMessageType() == "ACCEPT":
+        elif message.messageType == "ACCEPT":
             if self.prior < message.n:
                 self.prior = message.n
                 self.value = message.value
 
-                returnMessage = Message(self, message.src, "ACCEPTED", self.value, self.n)
+                returnMessage = Message(self, message.src, "ACCEPTED", self.value, self.prior)
+                self.network.queueMessage(returnMessage)
+            else:
+                returnMessage = Message(self, message.src, "REJECTED", None, self.prior)
                 self.network.queueMessage(returnMessage)
 
-    def getName(self):
-        """Gets the name of this computer."""
-        return f"{self.cType[0]}{self.ID}"
+        elif message.messageType == "ACCEPTED":
+            self.value = message.value
+
+        elif message.messageType == "REJECTED":
+            self.rejects += 1
+
+            if self.rejects > (len(self.network.acceptors) // 2):
+                Computer.n += 1
+                self.rejected = True
+
+            returnMessage = Message(self, message.src, "PREPARE", None, Computer.n)
+            self.network.queueMessage(returnMessage)

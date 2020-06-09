@@ -1,18 +1,8 @@
-# from computer import Computer
-
-
 class Message():
     """The Message class."""
 
     def __init__(self, src, dst, messageType, value, n=None):
         """Initialises the Message class."""
-        # if not isinstance(src, (Computer, type(None))):
-        #     raise TypeError("The src must be of type Computer or None if from external agent.")
-        # if not isinstance(dst, Computer):
-        #     raise TypeError("The dst must be of type Computer.")
-        # if not isinstance(value, int):
-        #     raise TypeError("The value must be of type integer.")
-
         self.src = src
         self.dst = dst
         self.messageType = Message.checkMessageType(messageType)
@@ -20,40 +10,6 @@ class Message():
 
         if n is not None:
             self.n = n
-
-    def setSource(self, source):
-        """Sets the source of the message."""
-        # if not isinstance(source, (Computer, type(None))):
-        #     raise TypeError("Src must be of type Computer or None if from external agent.")
-        self.src = source
-
-    def getSource(self):
-        """Gets the source of the message."""
-        return self.src
-
-    def setDestination(self, destination):
-        """Sets the destination of the message."""
-        # if not isinstance(destination, Computer):
-        #     raise TypeError("Dst must be of type Computer.")
-        self.dst = destination
-
-    def getDestination(self):
-        """Gets the destination of the message."""
-        return self.dst
-
-    def setMessageType(self, messageType):
-        """Sets the type of the message: {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED}."""
-        self.messageType = Message.checkMessageType(messageType)
-
-    def getMessageType(self):
-        """Gets the type of the message: {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED}."""
-        return self.messageType
-
-    def getValue(self):
-        return self.value
-
-    def setValue(self, value):
-        self.value = value
 
     @staticmethod
     def checkMessageType(messageType):
@@ -76,7 +32,7 @@ class Message():
             return f"\t-> {self.dst.getName()}  {self.messageType} v={self.value}"
 
         if self.messageType == "PROMISE":
-            prior = self.src.prior if self.src.prior != 0 else None
+            prior = f"n={self.n}, v={self.value}" if self.src.prior != 0 else None
             return f"{self.src.getName()} -> {self.dst.getName()}  {self.messageType} n={self.n} (Prior: {prior})"
 
         if self.messageType in ("ACCEPT", "ACCEPTED"):
