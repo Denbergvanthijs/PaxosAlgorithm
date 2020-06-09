@@ -1,5 +1,10 @@
+from message import Message
+
+
 class Computer:
     """The Computer class."""
+
+    n = 1
 
     def __init__(self, ID, cType, network):
         """Initialises the Computer class."""
@@ -11,6 +16,10 @@ class Computer:
         self.network = network
 
         self.failed = False
+        self.value = None
+        self.prior = 0
+        self.promises = 0
+        self.accepted = False
 
     def setComputerType(self, cType):
         """Sets the type of this computer: {Proposer, Acceptor}."""
@@ -31,33 +40,47 @@ class Computer:
 
     def deliverMessage(self, message):
         """Delivers a message to a computer, via the Network-queue."""
-        
-        # PROPOSER
+        # Extern naar PROPOSER, dit handelt een proposer af
         if message.getMessageType() == "PROPOSE":
-            message.setSource(self)
-            message.setMessageType("PREPARE")
+            self.value = message.value
 
-            for i in self.network.acceptors:
-                message.setDestination(i)
-                self.network.queueMessage(message)
-        
-        # ACCEPTOR
+            for acceptor in self.network.acceptors:
+                # PREPARE message can not contain the value:
+                # https://en.wikipedia.org/wiki/Paxos_(computer_science)#Phase_1a:_Prepare
+                returnMessage = Message(self, acceptor, "PREPARE", None, Computer.n)
+                self.network.queueMessage(returnMessage)
+
+            Computer.n += 1
+
+        # Proposer naar ACCEPTOR, dit handelt een acceptor af
         elif message.getMessageType() == "PREPARE":
-            pass
-            # Check of message.value groter is dan de vorig bekende value 
-            # Als dat zo is, stuur promise naar de proposer
+            if message.n > self.prior:
+                returnMessage = Message(self, message.src, "PROMISE", None, message.n)
+                self.network.queueMessage(returnMessage)
 
-        # PROPOSER
+        # Acceptor naar PROPOSER, dit handelt een proposer af
         elif message.getMessageType() == "PROMISE":
-            message.setDestination(message.getSource())
-            message.setSource(self)
-            message.setMessageType("ACCEPT")
+            self.promises += 1
 
-            self.network.queueMessage(message)
+            # 50% accepted is not enough
+            if self.promises > (len(self.network.acceptors) // 2):
+                if not self.accepted:
+                    for acceptor in self.network.acceptors:
+                        returnMessage = Message(self, acceptor, "ACCEPT", self.value, message.n)
+                        self.network.queueMessage(returnMessage)
 
-        # ACCEPTOR    
+                    self.promises = 0
+                    self.accepted = True
+
+        # Proposer naar ACCEPTOR, dit handelt een acceptor af
         elif message.getMessageType() == "ACCEPT":
-            pass
-            # Geaccpeteerd (ACCEPTED) als message.value hoogste is
-            # Weigeren (REJECTED) als dat niet zo is 
-            
+            if self.prior < message.n:
+                self.prior = message.n
+                self.value = message.value
+
+                returnMessage = Message(self, message.src, "ACCEPTED", self.value, self.n)
+                self.network.queueMessage(returnMessage)
+
+    def getName(self):
+        """Gets the name of this computer."""
+        return f"{self.cType[0]}{self.ID}"

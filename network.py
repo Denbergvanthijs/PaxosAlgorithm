@@ -1,6 +1,3 @@
-from message import Message
-
-
 class Network():
     """The Network class."""
 
@@ -18,12 +15,12 @@ class Network():
 
     def getProposer(self, ID):
         """Sets list with all the proposers."""
-        return self.proposers[ID-1]
+        return self.proposers[ID - 1]
 
     def queueMessage(self, message):
         """Adds a message to the queue."""
-        if not isinstance(message, Message):
-            raise TypeError("The message must be of type Message")
+        # if not isinstance(message, Message):
+        #     raise TypeError("The message must be of type Message")
         self.messages.append(message)
 
     def extractMessage(self):
@@ -39,4 +36,5 @@ class Network():
 
     def numberOfMessages(self):
         """Gets the number of messages of the network."""
+        # print(self.messages)
         return len(self.messages)
