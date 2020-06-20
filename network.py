@@ -3,9 +3,9 @@ class Network():
 
     def __init__(self):
         """Initialises the network."""
-        self.messages = []  # The queue of messages
-        self.proposers = []
-        self.acceptors = []
+        self.messages = []  # The message queue
+        self.proposers = []  # List of all proposers
+        self.acceptors = []  # List of all acceptors
 
     def queueMessage(self, message):
         """Adds a message to the queue."""

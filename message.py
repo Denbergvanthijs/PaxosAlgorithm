@@ -32,7 +32,7 @@ class Message():
             return f"\t-> {self.dst.getName()}  {self.messageType} v={self.value}"
 
         if self.messageType == "PROMISE":
-            prior = f"n={self.src.prior}, v={self.value}" if self.src.prior != 0 else None
+            prior = f"n={self.src.priorN}, v={self.value}" if self.src.priorN != 0 else None
             return f"{self.src.getName()} -> {self.dst.getName()}  {self.messageType} n={self.n} (Prior: {prior})"
 
         if self.messageType in ("ACCEPT", "ACCEPTED"):

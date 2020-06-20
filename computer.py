@@ -1,4 +1,5 @@
 from message import Message
+from network import Network
 
 
 class Computer:
@@ -6,19 +7,21 @@ class Computer:
 
     n = 1
 
-    def __init__(self, ID, cType, network):
+    def __init__(self, ID: int, cType: str, network: Network):
         """Initialises the Computer class."""
         if not cType.upper() in ("ACCEPTOR", "PROPOSER"):
             raise ValueError("Not a valid cType.")
 
-        self.ID = ID
+        self.ID = ID  # The computer number
         self.cType = cType.upper()  # Cleans the string
         self.network = network
 
+        self.failed = False  # If the current computer is broken
+
         self.proposed = None  # Initial proposed value from external.
-        self.failed = False
         self.value = None  # Current accepted value
-        self.prior = 0  # Prior number of transaction
+        self.n = 1  # Current number of transaction
+        self.priorN = 0  # Prior number of transaction
 
         self.promises = 0  # Number of promises from Acceptors to Proposers
         self.accepted = []  # The accepted Ns
@@ -28,33 +31,33 @@ class Computer:
 
         self.highestN = 0  # Highest promised number
         self.highestV = 0  # Highest promised value
-        self.n = 1
 
     def getName(self):
         """Gets the name of the current computer."""
         return f"{self.cType[0]}{self.ID}"
 
     def deliverMessage(self, message):
-        """Delivers a message to a computer, via the Network-queue."""
-        # Extern naar PROPOSER, dit handelt een proposer af
+        """Delivers a message to another computer, via the Network-queue."""
+        # External to Proposer, Proposer returns "PREPARE" to all acceptors
         if message.messageType == "PROPOSE":
             self.proposed = message.value
 
             for acceptor in self.network.acceptors:
-                # PREPARE message can not contain the value:
+                # PREPARE message can not contain the proposed value:
                 # https://en.wikipedia.org/wiki/Paxos_(computer_science)#Phase_1a:_Prepare
+
                 returnMessage = Message(self, acceptor, "PREPARE", None, n=Computer.n)
                 self.network.queueMessage(returnMessage)
 
-            Computer.n += 1
+            Computer.n += 1  # Increment the transaction number with one for every new PROPOSE
 
-        # Proposer naar ACCEPTOR, dit handelt een acceptor af
+        # Proposer to Acceptor, Acceptor returns any of: {Nothing, "PROMISE"} to Proposer
         elif message.messageType == "PREPARE":
-            if message.n > self.prior:
+            if message.n > self.priorN:
                 returnMessage = Message(self, message.src, "PROMISE", self.value, n=message.n)
                 self.network.queueMessage(returnMessage)
 
-        # Acceptor naar PROPOSER, dit handelt een proposer af
+        # Acceptor to Proposer, Proposer returns nothing to a single Acceptor or "PROMISE" to all Acceptors
         elif message.messageType == "PROMISE":
             self.promises += 1
 
@@ -79,21 +82,23 @@ class Computer:
                     self.promises = 0
                     self.accepted.append(number)
 
-        # Proposer naar ACCEPTOR, dit handelt een acceptor af
+        # Proposer to Acceptor, Acceptor returns any of: {"ACCEPTED", "REJECTED"} to Proposer
         elif message.messageType == "ACCEPT":
-            if message.n > self.prior:
-                self.prior = message.n
+            if message.n > self.priorN:
+                self.priorN = message.n
                 self.value = message.value
 
-                returnMessage = Message(self, message.src, "ACCEPTED", self.value, n=self.prior)
+                returnMessage = Message(self, message.src, "ACCEPTED", self.value, n=self.priorN)
                 self.network.queueMessage(returnMessage)
             else:
                 returnMessage = Message(self, message.src, "REJECTED", None, n=self.n)
                 self.network.queueMessage(returnMessage)
 
+        # Acceptor to Proposer, Proposer returns nothing
         elif message.messageType == "ACCEPTED":
             self.value = message.value
 
+        # Acceptor to Proposer, Proposer returns nothing to a single Acceptor or "PREPARE" to all Acceptors
         elif message.messageType == "REJECTED":
             self.rejects += 1
 
