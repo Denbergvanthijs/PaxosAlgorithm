@@ -1,6 +1,6 @@
-from network import Network
-from message import Message
 from computer import Computer
+from message import Message
+from network import Network
 
 
 class Simulation():
@@ -19,7 +19,7 @@ class Simulation():
         for tick in range(self.tMax):
             tickVal = str(tick).zfill(3)
             if (not self.network.numberOfMessages()) and (not self.numberOfEvents()):
-                return None  # Simulation is stopped
+                break  # Break, not return or else code under the for-loop wil be skipped
 
             event = self.events.pop(tick) if tick in self.events else None  # Removes current event, if event
             if event is not None:
@@ -63,6 +63,17 @@ class Simulation():
 
 
 if __name__ == "__main__":
+    # Example 1
+    network = Network()
+    network.proposers = [Computer(i, "Proposer", network) for i in range(1, 1 + 1)]
+    network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, 3 + 1)]
+
+    E = {0: [[], [], network.proposers[0], 42]}
+
+    s = Simulation(nProposers=2, nAcceptors=3, tMax=15, events=E, network=network)
+    s.run()
+
+    # Example 2
     network = Network()
     network.proposers = [Computer(i, "Proposer", network) for i in range(1, 2 + 1)]
     network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, 3 + 1)]
@@ -72,13 +83,6 @@ if __name__ == "__main__":
          11: [[], [], network.proposers[1], 37],
          26: [[], [network.proposers[0]], None, None]
          }
-
-    # 2 3 50
-    # 0 PROPOSE 1 42
-    # 8 FAIL PROPOSER 1
-    # 11 PROPOSE 2 37
-    # 26 RECOVER PROPOSER 1
-    # 0 END
 
     s = Simulation(nProposers=2, nAcceptors=3, tMax=50, events=E, network=network)
     s.run()

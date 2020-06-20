@@ -21,10 +21,14 @@ class Computer:
         self.prior = 0  # Prior number of transaction
 
         self.promises = 0  # Number of promises from Acceptors to Proposers
-        self.accepted = False  # If the current transaction is accepted
+        self.accepted = []  # The accepted Ns
 
         self.rejects = 0  # Number of rejected from Accepters to Proposers
         self.rejected = False  # If the current transaction is
+
+        self.highestN = 0  # Highest promised number
+        self.highestV = 0  # Highest promised value
+        self.n = 1
 
     def getName(self):
         """Gets the name of the current computer."""
@@ -39,7 +43,7 @@ class Computer:
             for acceptor in self.network.acceptors:
                 # PREPARE message can not contain the value:
                 # https://en.wikipedia.org/wiki/Paxos_(computer_science)#Phase_1a:_Prepare
-                returnMessage = Message(self, acceptor, "PREPARE", None, Computer.n)
+                returnMessage = Message(self, acceptor, "PREPARE", None, n=Computer.n)
                 self.network.queueMessage(returnMessage)
 
             Computer.n += 1
@@ -47,36 +51,44 @@ class Computer:
         # Proposer naar ACCEPTOR, dit handelt een acceptor af
         elif message.messageType == "PREPARE":
             if message.n > self.prior:
-                returnMessage = Message(self, message.src, "PROMISE", self.value, self.prior)
+                returnMessage = Message(self, message.src, "PROMISE", self.value, n=message.n)
                 self.network.queueMessage(returnMessage)
 
         # Acceptor naar PROPOSER, dit handelt een proposer af
         elif message.messageType == "PROMISE":
             self.promises += 1
 
+            if message.value is not None:
+                # self.value will have the highest value send by the proposers
+                self.highestN, self.highestV = (message.n, message.value) if message.n > self.highestN else (self.highestN, self.highestV)
+
             # 50% accepted is not enough
             if self.promises > (len(self.network.acceptors) // 2):
-                if message.value is not None:
-                    self.value = message.value if message.value > self.value else self.value
+                self.value = self.proposed  # If accepted, accepted value will be the proposed value
 
-                if not self.accepted:
+                if message.n not in self.accepted:
+                    if self.highestN > self.n:  # If an acceptor has an higher propose than current proposer
+                        number, value = self.highestN, self.highestV
+                    else:
+                        number, value = self.n, self.proposed
+
                     for acceptor in self.network.acceptors:
-                        returnMessage = Message(self, acceptor, "ACCEPT", self.proposed, message.n)
+                        returnMessage = Message(self, acceptor, "ACCEPT", value, n=number)
                         self.network.queueMessage(returnMessage)
 
                     self.promises = 0
-                    self.accepted = True
+                    self.accepted.append(number)
 
         # Proposer naar ACCEPTOR, dit handelt een acceptor af
         elif message.messageType == "ACCEPT":
-            if self.prior < message.n:
+            if message.n > self.prior:
                 self.prior = message.n
                 self.value = message.value
 
-                returnMessage = Message(self, message.src, "ACCEPTED", self.value, self.prior)
+                returnMessage = Message(self, message.src, "ACCEPTED", self.value, n=self.prior)
                 self.network.queueMessage(returnMessage)
             else:
-                returnMessage = Message(self, message.src, "REJECTED", None, self.prior)
+                returnMessage = Message(self, message.src, "REJECTED", None, n=self.n)
                 self.network.queueMessage(returnMessage)
 
         elif message.messageType == "ACCEPTED":
@@ -86,8 +98,9 @@ class Computer:
             self.rejects += 1
 
             if self.rejects > (len(self.network.acceptors) // 2):
-                Computer.n += 1
-                self.rejected = True
+                if not self.rejected:  # If not yet rejected
+                    self.rejected = True
 
-            returnMessage = Message(self, message.src, "PREPARE", None, Computer.n)
-            self.network.queueMessage(returnMessage)
+                    for acceptor in self.network.acceptors:
+                        returnMessage = Message(self, acceptor, "PREPARE", None, Computer.n)
+                        self.network.queueMessage(returnMessage)

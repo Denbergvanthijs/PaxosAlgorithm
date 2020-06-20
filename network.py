@@ -12,8 +12,8 @@ class Network():
         self.messages.append(message)
 
     def extractMessage(self):
-        """
-        Returns the first available message.
+        """Returns the first available message.
+
         A message is only available if both its source and destination are not failing.
         """
         for index, message in enumerate(self.messages):
