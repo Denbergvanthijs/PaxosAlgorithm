@@ -1,3 +1,8 @@
+from typing import Union
+
+from message import Message
+
+
 class Network():
     """The Network class."""
 
@@ -7,11 +12,11 @@ class Network():
         self.proposers = []  # List of all proposers
         self.acceptors = []  # List of all acceptors
 
-    def queueMessage(self, message):
+    def queueMessage(self, message: Message) -> None:
         """Adds a message to the queue."""
         self.messages.append(message)
 
-    def extractMessage(self):
+    def extractMessage(self) -> Union[None, Message]:
         """Returns the first available message.
 
         A message is only available if both its source and destination are not failing.
@@ -22,6 +27,6 @@ class Network():
 
         return None  # Returns None when no message is available
 
-    def numberOfMessages(self):
+    def numberOfMessages(self) -> int:
         """Gets the number of messages of the network."""
         return len(self.messages)

@@ -32,11 +32,11 @@ class Computer:
         self.highestN = 0  # Highest promised number
         self.highestV = 0  # Highest promised value
 
-    def getName(self):
+    def getName(self) -> str:
         """Gets the name of the current computer."""
         return f"{self.cType[0]}{self.ID}"
 
-    def deliverMessage(self, message):
+    def deliverMessage(self, message: Message) -> None:
         """Delivers a message to another computer, via the Network-queue."""
         # External to Proposer, Proposer returns "PREPARE" to all acceptors
         if message.messageType == "PROPOSE":

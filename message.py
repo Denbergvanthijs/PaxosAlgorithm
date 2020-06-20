@@ -1,7 +1,7 @@
 class Message():
     """The Message class."""
 
-    def __init__(self, src, dst, messageType, value, n=None):
+    def __init__(self, src, dst, messageType: str, value: int, n: int = None):
         """Initialises the Message class."""
         self.src = src
         self.dst = dst
@@ -12,7 +12,7 @@ class Message():
             self.n = n
 
     @staticmethod
-    def checkMessageType(messageType):
+    def checkMessageType(messageType: str) -> str:
         """Checks the given messageType. Raises or returns a valid string.
 
         Only accepts the following strings:

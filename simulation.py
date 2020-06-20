@@ -14,7 +14,7 @@ class Simulation():
         self.events = events
         self.network = network
 
-    def run(self):
+    def run(self) -> None:
         """Runs the simulation."""
         for tick in range(self.tMax):
             if (not self.network.numberOfMessages()) and (not len(self.events)):
