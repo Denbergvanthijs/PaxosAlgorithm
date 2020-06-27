@@ -76,15 +76,33 @@ if __name__ == "__main__":
     # s.run()
 
     # Example 2
+    # network = Network()
+    # network.proposers = [Computer(i, "Proposer", network) for i in range(1, 2 + 1)]
+    # network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, 3 + 1)]
+
+    # E = {0: [[], [], network.proposers[0], 42],
+    #      8: [[network.proposers[0]], [], None, None],
+    #      11: [[], [], network.proposers[1], 37],
+    #      26: [[], [network.proposers[0]], None, None]
+    #      }
+
+    # s = Simulation(nProposers=2, nAcceptors=3, tMax=50, events=E, network=network)
+    # s.run()
+
+    # Bike Data 1
     network = Network()
-    network.proposers = [Computer(i, "Proposer", network) for i in range(1, 2 + 1)]
+    network.proposers = [Computer(i, "Proposer", network) for i in range(1, 1 + 1)]
     network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, 3 + 1)]
+    # network.learners = [Computer(i, "Learner", network) for i in range(1, 1 + 1)]
 
-    E = {0: [[], [], network.proposers[0], 42],
-         8: [[network.proposers[0]], [], None, None],
-         11: [[], [], network.proposers[1], 37],
-         26: [[], [network.proposers[0]], None, None]
-         }
+    E = {0: [[], [], network.proposers[0], 8],
+         10: [[], [], network.proposers[0], 61],
+         20: [[], [], network.proposers[0], 90],
+         30: [[], [], network.proposers[0], 64],
+         40: [[], [], network.proposers[0], 17],
+         50: [[], [], network.proposers[0], 8],
+         60: [[], [], network.proposers[0], 78],
+         70: [[], [], network.proposers[0], 62]}
 
-    s = Simulation(nProposers=2, nAcceptors=3, tMax=50, events=E, network=network)
+    s = Simulation(nProposers=1, nAcceptors=3, tMax=100, events=E, network=network)  # nLearners=1
     s.run()
