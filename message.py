@@ -16,12 +16,12 @@ class Message():
         """Checks the given messageType. Raises or returns a valid string.
 
         Only accepts the following strings:
-        {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED}
+        {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED, SUCCES, PREDICTION}
         """
         if not isinstance(messageType, str):
             raise TypeError("MessageType must be string.")
 
-        if messageType.upper() in ("PROPOSE", "PREPARE", "PROMISE", "ACCEPT", "ACCEPTED", "REJECTED"):
+        if messageType.upper() in ("PROPOSE", "PREPARE", "PROMISE", "ACCEPT", "ACCEPTED", "REJECTED", "SUCCES", "PREDICTION"):
             return messageType.upper()  # Cleans the string
         else:
             raise ValueError("Not a valid messageType.")
@@ -31,11 +31,15 @@ class Message():
         if self.src is None:  # If PROPOSE from external
             return f"\t-> {self.dst.getName()}  {self.messageType} v={self.value}"
 
-        if self.messageType == "PROMISE":
+        elif self.messageType == "PROMISE":
             prior = f"n={self.src.priorN}, v={self.value}" if self.src.priorN != 0 else None
             return f"{self.src.getName()} -> {self.dst.getName()}  {self.messageType} n={self.n} (Prior: {prior})"
 
-        if self.messageType in ("ACCEPT", "ACCEPTED"):
+        elif self.messageType in ("ACCEPT", "ACCEPTED", "SUCCES"):
             return f"{self.src.getName()} -> {self.dst.getName()}  {self.messageType} n={self.n} v={self.value}"
 
-        return f"{self.src.getName()} -> {self.dst.getName()}  {self.messageType} n={self.n}"
+        elif self.messageType == "PREDICTION":
+            return f"{self.src.getName()} PREDICTED FOR n={self.n}: v={self.value:.0f}"
+
+        else:
+            return f"{self.src.getName()} -> {self.dst.getName()}  {self.messageType} n={self.n}"

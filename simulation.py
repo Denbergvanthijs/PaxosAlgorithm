@@ -1,36 +1,71 @@
-from computer import Computer
+from computer import Acceptor, Learner, Proposer
 from message import Message
 from network import Network
-
-
-def readFile(filename):
-    """Read a file"""
-    events = {}
-    
-    with open(f".\inputs\{filename}.txt", "r") as fileWithData:
-        simulationValues = str.split(fileWithData.readline())
-        events['proposers'] = simulationValues[0]
-        events['acceptors'] = simulationValues[1]
-        events['ticks'] = simulationValues[2]
-
-        events['allEvents'] = {}
-
-        eventDetails = fileWithData.readlines()
-        for i, line in enumerate(eventDetails, 1):
-            events['allEvents'][f'{i}'] = str.split(line)
-    return events
 
 
 class Simulation():
     """The Simulation class."""
 
-    def __init__(self, nProposers: int, nAcceptors: int, tMax: int, events: dict, network: Network):
+    def __init__(self, filename):
         """Initialises the Simulation class."""
-        self.nProposers = nProposers
-        self.nAcceptors = nAcceptors
-        self.tMax = tMax
-        self.events = events
-        self.network = network
+        self.filename = filename
+
+        self.nProposers = 0
+        self.nAcceptors = 0
+        self.tMax = 0
+        self.events = {}
+        self.network = Network()
+
+    def setup(self) -> None:
+        """Setup of the simulation."""
+
+        with open(f"./inputs/{self.filename}.txt", "r") as fileWithData:
+            simulationValues = fileWithData.readline().split()
+
+            self.nProposers = int(simulationValues[0])
+            self.nAcceptors = int(simulationValues[1])
+
+            if len(simulationValues) == 3:
+                self.nLearners = None
+                self.tMax = int(simulationValues[2])
+            else:
+                self.nLearners = int(simulationValues[2])
+                self.tMax = int(simulationValues[3])
+
+            eventDetails = fileWithData.readlines()
+
+        self.network.proposers = [Proposer(i, self.network) for i in range(1, self.nProposers + 1)]
+        self.network.acceptors = [Acceptor(i, self.network) for i in range(1, self.nAcceptors + 1)]
+        if self.nLearners is not None:
+            self.network.learners = [Learner(i, self.network) for i in range(1, self.nLearners + 1)]
+
+        for i, line in enumerate(eventDetails, start=0):
+            data = line.split()
+
+            if len(data) == 2:
+                break
+
+            event = [[], [], None, None]
+            if data[1].upper() == "PROPOSE":
+                ID, value = int(data[2]) - 1, int(data[3])
+                event[2] = self.network.proposers[ID]
+                event[3] = value
+
+            elif data[1].upper() == "FAIL":
+                cType, ID = data[2], int(data[3]) - 1
+                if cType.upper() == "PROPOSER":
+                    event[0].append(self.network.proposers[ID])
+                elif cType.upper() == "ACCEPTOR":
+                    event[0].append(self.network.acceptors[ID])
+
+            elif data[1].upper() == "RECOVER":
+                cType, ID = data[2], int(data[3]) - 1
+                if cType.upper() == "PROPOSER":
+                    event[1].append(self.network.proposers[ID])
+                elif cType.upper() == "ACCEPTOR":
+                    event[1].append(self.network.acceptors[ID])
+
+            self.events[int(data[0])] = event
 
     def run(self) -> None:
         """Runs the simulation."""
@@ -79,32 +114,35 @@ class Simulation():
 
 
 if __name__ == "__main__":
-    # NOTE: Only 1 of the two examples can be on at a time
-    # TODO: Write function to read the files from `./inputs` folder
-    # TODO: Consider inheriting two classes from Computer: Proposer, Acceptor
+    # NOTE: Only one of the examples can be on at a time
 
     # Example 1
-    
-    #eventDetails = readFile('example1')
+    # s = Simulation(filename="example1")
 
-    #network = Network()
-    #network.proposers = [Computer(i, "Proposer", network) for i in range(1, int(eventDetails['proposers']) + 1)]
-    #network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, int(eventDetails['acceptors')] + 1)]
-    
-    #E = eventDetails['allEvents']
-
-    #s = Simulation(nProposers=eventDetails['proposers'], nAcceptors=eventDetails['acceptors'], tMax=eventDetails['ticks'], events=E, network=network)
-    #s.run()
+    # s.setup()
+    # Efake = {0: [[], [], s.network.proposers[0], 42]}
 
     # Example 2
-    
-    eventDetails = readFile('example2')
+    # s = Simulation(filename="example2")
+    # s.setup()
 
-    network = Network()
-    network.proposers = [Computer(i, "Proposer", network) for i in range(1, int(eventDetails['proposers']) + 1)]
-    network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, int(eventDetails['acceptors')] + 1)]
-    
-    E = eventDetails['allEvents']
+    # Efake = {0: [[], [], s.network.proposers[0], 42],
+    #          8: [[s.network.proposers[0]], [], None, None],
+    #          11: [[], [], s.network.proposers[1], 37],
+    #          26: [[], [s.network.proposers[0]], None, None]}
 
-    s = Simulation(nProposers=eventDetails['proposers'], nAcceptors=eventDetails['acceptors'], tMax=eventDetails['ticks'], events=E, network=network)
+    # bikedata 1
+    s = Simulation(filename="bikedata1")
+    s.setup()
+
+    Efake = {0: [[], [], s.network.proposers[0], 8],
+             10: [[], [], s.network.proposers[0], 61],
+             20: [[], [], s.network.proposers[0], 90],
+             30: [[], [], s.network.proposers[0], 64],
+             40: [[], [], s.network.proposers[0], 17],
+             50: [[], [], s.network.proposers[0], 8],
+             60: [[], [], s.network.proposers[0], 78],
+             70: [[], [], s.network.proposers[0], 62]}
+
+    assert s.events == Efake
     s.run()

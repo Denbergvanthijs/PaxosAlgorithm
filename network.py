@@ -11,6 +11,7 @@ class Network():
         self.messages = []  # The message queue
         self.proposers = []  # List of all proposers
         self.acceptors = []  # List of all acceptors
+        self.learners = []  # List of all learners
 
     def queueMessage(self, message: Message) -> None:
         """Adds a message to the queue."""
