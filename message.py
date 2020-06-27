@@ -16,12 +16,12 @@ class Message():
         """Checks the given messageType. Raises or returns a valid string.
 
         Only accepts the following strings:
-        {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED, SUCCES, PREDICTION}
+        {PROPOSE, PREPARE, PROMISE, ACCEPT, ACCEPTED, REJECTED, SUCCES, PREDICTED}
         """
         if not isinstance(messageType, str):
             raise TypeError("MessageType must be string.")
 
-        if messageType.upper() in ("PROPOSE", "PREPARE", "PROMISE", "ACCEPT", "ACCEPTED", "REJECTED", "SUCCES", "PREDICTION"):
+        if messageType.upper() in ("PROPOSE", "PREPARE", "PROMISE", "ACCEPT", "ACCEPTED", "REJECTED", "SUCCES", "PREDICTED"):
             return messageType.upper()  # Cleans the string
         else:
             raise ValueError("Not a valid messageType.")
@@ -38,7 +38,8 @@ class Message():
         elif self.messageType in ("ACCEPT", "ACCEPTED", "SUCCES"):
             return f"{self.src.getName()} -> {self.dst.getName()}  {self.messageType} n={self.n} v={self.value}"
 
-        elif self.messageType == "PREDICTION":
+        elif self.messageType == "PREDICTED":
+            # N and V are both shown for completeness
             return f"{self.src.getName()} PREDICTED FOR n={self.n}: v={self.value:.0f}"
 
         else:

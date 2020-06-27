@@ -67,13 +67,13 @@ class Simulation():
 
             self.events[int(data[0])] = event
 
-    def run(self) -> None:
+    def run(self, zWidth=3) -> None:
         """Runs the simulation."""
         for tick in range(self.tMax):
             if (not self.network.numberOfMessages()) and (not len(self.events)):
                 break  # Break, not return or else code under the for-loop wil be skipped
 
-            tickVal = str(tick).zfill(3)  # String representation of current ticknumber
+            tickVal = str(tick).zfill(zWidth)  # String representation of current ticknumber
             event = self.events.pop(tick, None)  # Removes current event, if event exists in dict
 
             if event is not None:
@@ -145,4 +145,4 @@ if __name__ == "__main__":
              70: [[], [], s.network.proposers[0], 62]}
 
     assert s.events == Efake
-    s.run()
+    s.run(zWidth=4)

@@ -167,5 +167,5 @@ class Learner(Computer):
         if message.messageType == "SUCCES":
             prediction = self.predictor(message.value)
 
-            returnMessage = Message(self, message.src, "PREDICTION", prediction, message.n)
+            returnMessage = Message(self, message.src, "PREDICTED", prediction, message.n)
             self.network.queueMessage(returnMessage)
