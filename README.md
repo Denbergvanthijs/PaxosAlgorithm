@@ -1,6 +1,8 @@
 # PaxosAlgorithm
 
-Implementation of the Paxos Algortihm
+![Python version](https://img.shields.io/badge/Python-v3.7-blue) ![License](https://img.shields.io/github/license/Denbergvanthijs/PaxosAlgorithm) ![Workflow](https://img.shields.io/github/workflow/status/Denbergvanthijs/PaxosAlgorithm/Flake8%20linting/master) ![GitHub All Releases](https://img.shields.io/github/downloads/Denbergvanthijs/PaxosAlgorithm/total)
+
+Implementation of the Paxos Algorithm in Python
 
 ## Flake8 configuration
 
