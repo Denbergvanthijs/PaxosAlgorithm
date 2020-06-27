@@ -36,6 +36,11 @@ class Computer:
         """Gets the name of the current computer."""
         return f"{self.cType[0]}{self.ID}"
 
+class Proposer(Computer):
+    def getName(self) -> str:
+        """Gets the name of the current computer."""
+        return f"{self.cType[0]}{self.ID}"
+
     def deliverMessage(self, message: Message) -> None:
         """Delivers a message to another computer, via the Network-queue."""
         # External to Proposer, Proposer returns "PREPARE" to all acceptors
@@ -57,8 +62,28 @@ class Computer:
                 returnMessage = Message(self, message.src, "PROMISE", self.value, n=message.n)
                 self.network.queueMessage(returnMessage)
 
+        # Proposer to Acceptor, Acceptor returns any of: {"ACCEPTED", "REJECTED"} to Proposer
+        elif message.messageType == "ACCEPT":
+            if message.n > self.priorN:
+                self.priorN = message.n
+                self.value = message.value
+
+                returnMessage = Message(self, message.src, "ACCEPTED", self.value, n=self.priorN)
+                self.network.queueMessage(returnMessage)
+            else:
+                returnMessage = Message(self, message.src, "REJECTED", None, n=self.n)
+                self.network.queueMessage(returnMessage)
+
+
+class Acceptor(Computer):
+    def getName(self) -> str:
+        """Gets the name of the current computer."""
+        return f"{self.cType[0]}{self.ID}"
+
+    def deliverMessage(self, message: Message) -> None:
+        """Delivers a message to another computer, via the Network-queue."""
         # Acceptor to Proposer, Proposer returns nothing to a single Acceptor or "PROMISE" to all Acceptors
-        elif message.messageType == "PROMISE":
+        if message.messageType == "PROMISE":
             self.promises += 1
 
             if message.value is not None:
