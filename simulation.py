@@ -3,6 +3,24 @@ from message import Message
 from network import Network
 
 
+def readFile(filename):
+    """Read a file"""
+    events = {}
+    
+    with open(f".\inputs\{filename}.txt", "r") as fileWithData:
+        simulationValues = str.split(fileWithData.readline())
+        events['proposers'] = simulationValues[0]
+        events['acceptors'] = simulationValues[1]
+        events['ticks'] = simulationValues[2]
+
+        events['allEvents'] = {}
+
+        eventDetails = fileWithData.readlines()
+        for i, line in enumerate(eventDetails, 1):
+            events['allEvents'][f'{i}'] = str.split(line)
+    return events
+
+
 class Simulation():
     """The Simulation class."""
 
@@ -66,25 +84,27 @@ if __name__ == "__main__":
     # TODO: Consider inheriting two classes from Computer: Proposer, Acceptor
 
     # Example 1
-    # network = Network()
-    # network.proposers = [Computer(i, "Proposer", network) for i in range(1, 1 + 1)]
-    # network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, 3 + 1)]
+    
+    #eventDetails = readFile('example1')
 
-    # E = {0: [[], [], network.proposers[0], 42]}
+    #network = Network()
+    #network.proposers = [Computer(i, "Proposer", network) for i in range(1, int(eventDetails['proposers']) + 1)]
+    #network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, int(eventDetails['acceptors')] + 1)]
+    
+    #E = eventDetails['allEvents']
 
-    # s = Simulation(nProposers=2, nAcceptors=3, tMax=15, events=E, network=network)
-    # s.run()
+    #s = Simulation(nProposers=eventDetails['proposers'], nAcceptors=eventDetails['acceptors'], tMax=eventDetails['ticks'], events=E, network=network)
+    #s.run()
 
     # Example 2
+    
+    eventDetails = readFile('example2')
+
     network = Network()
-    network.proposers = [Computer(i, "Proposer", network) for i in range(1, 2 + 1)]
-    network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, 3 + 1)]
+    network.proposers = [Computer(i, "Proposer", network) for i in range(1, int(eventDetails['proposers']) + 1)]
+    network.acceptors = [Computer(i, "Acceptor", network) for i in range(1, int(eventDetails['acceptors')] + 1)]
+    
+    E = eventDetails['allEvents']
 
-    E = {0: [[], [], network.proposers[0], 42],
-         8: [[network.proposers[0]], [], None, None],
-         11: [[], [], network.proposers[1], 37],
-         26: [[], [network.proposers[0]], None, None]
-         }
-
-    s = Simulation(nProposers=2, nAcceptors=3, tMax=50, events=E, network=network)
+    s = Simulation(nProposers=eventDetails['proposers'], nAcceptors=eventDetails['acceptors'], tMax=eventDetails['ticks'], events=E, network=network)
     s.run()
